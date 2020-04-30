@@ -57,15 +57,21 @@ const RandomizeButton = () => {
 }
 
 const App = () => (
-  <GlobalStateProvider rootReducer={sampleReducer}>
-      <div className="outer">
-        <div className="container">
-          Question: <Question />
+  <GlobalStateProvider reducer={sampleReducer}>
+    <div className="outer">
+      <div className="container">
+        Question: <Question />
           Answer: <Answer />
-          <SolveButton />
-          <RandomizeButton />
-        </div>
+        <SolveButton />
+        <RandomizeButton />
       </div>
+      <p>
+        <strong>Note</strong><br/>
+          In Debug mode (<em>yarn start</em>) React <a href="https://github.com/facebook/react/issues/15074#issuecomment-471197572" target="_blank">will double-render any component using Hooks by design</a>.<br/>
+          Running the sample app in production (<em>yarn build &amp;&amp; npx serve build</em>) will show the correct render counter values
+      </p>
+
+    </div>
   </GlobalStateProvider>
 )
 

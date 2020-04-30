@@ -28,8 +28,8 @@ class StateStore {
 
 const GlobalStateContext = React.createContext(new StateStore())
 
-export const GlobalStateProvider = ({ rootReducer, children }) => {
-    const stateStore = useMemo(() => new StateStore(rootReducer), [rootReducer])
+export const GlobalStateProvider = ({ reducer, children }) => {
+    const stateStore = useMemo(() => new StateStore(reducer), [/* ignore reducer */]) /* eslint-disable-line react-hooks/exhaustive-deps */
 
     return <GlobalStateContext.Provider value={stateStore}>
         {children}
@@ -40,15 +40,13 @@ export const useGlobalState = (selector = identity) => {
     const context = useContext(GlobalStateContext)
     const [selectedState, setSelectedState] = useState(selector(context.state))
 
-    const stableSelector = useCallback(selector, [ /* ignore selector updates */ ]) /* eslint-disable-line react-hooks/exhaustive-deps */
-
     useEffect(() => {
         // TODO: deep equality check, this only triggers an update on referential inequality
-        const callback = state => setSelectedState(stableSelector(state))
+        const callback = state => setSelectedState(selector(state))
         
         context.subscribe(callback)
         return () => context.unsubscribe(callback)
-    }, [context, stableSelector, selectedState])
+    }, [context, selectedState, /* ignore selector */]) /* eslint-disable-line react-hooks/exhaustive-deps */
 
     return [selectedState, { dispatch: context.dispatch }]
 }

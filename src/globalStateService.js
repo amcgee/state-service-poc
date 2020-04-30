@@ -1,61 +1,55 @@
-import React, { useMemo, useEffect, useCallback, useContext, useState } from 'react'
+import React, { useEffect, useCallback, useContext, useState } from 'react'
 
 const identity = state => state
 
-class StateStore {
-    state = undefined
-    subscriptions = new Set()
-    reducer
+export const createStore = (reducer = identity) => {
+    const subscriptions = new Set()
+    let state = reducer(undefined, undefined)
 
-    constructor(reducer = identity) {
-        this.reducer = reducer
-        this.state = reducer(undefined, undefined)
-    }
-
-    subscribe = (callback) => {
-        this.subscriptions.add(callback)
-    }
-    unsubscribe = (callback) => {
-        this.subscriptions.delete(callback)
-    }
-    dispatch = (action) => {
-        this.state = this.reducer(this.state, action)
-        for (let callback of this.subscriptions) {
-            callback(this.state)
+    return {
+        getState: () => state,
+        subscribe: callback => {
+            subscriptions.add(callback)
+        },
+        unsubscribe: callback => {
+            subscriptions.delete(callback)
+        },
+        dispatch: action => {
+            state = reducer(state, action)
+            for (let callback of subscriptions) {
+                callback(state)
+            }
         }
     }
 }
 
-const GlobalStateContext = React.createContext(new StateStore())
+const GlobalStateContext = React.createContext(createStore())
+const useGlobalStateStore = () => useContext(GlobalStateContext)
 
-export const GlobalStateProvider = ({ reducer, children }) => {
-    const stateStore = useMemo(() => new StateStore(reducer), [/* ignore reducer */]) /* eslint-disable-line react-hooks/exhaustive-deps */
-
-    return <GlobalStateContext.Provider value={stateStore}>
+export const GlobalStateProvider = ({ store, children }) => 
+    <GlobalStateContext.Provider value={store}>
         {children}
     </GlobalStateContext.Provider>
-}
 
 export const useGlobalState = (selector = identity) => {
-    const context = useContext(GlobalStateContext)
-    const [selectedState, setSelectedState] = useState(selector(context.state))
+    const store = useGlobalStateStore()
+    const [selectedState, setSelectedState] = useState(selector(store.getState()))
 
     useEffect(() => {
         // TODO: deep equality check, this only triggers an update on referential inequality
-        const callback = state => setSelectedState(selector(state))
-        
-        context.subscribe(callback)
-        return () => context.unsubscribe(callback)
-    }, [context, selectedState, /* ignore selector */]) /* eslint-disable-line react-hooks/exhaustive-deps */
+        const callback = state => setSelectedState(selector(state)) 
+        store.subscribe(callback)
+        return () => store.unsubscribe(callback)
+    }, [store, selectedState, /* ignore selector */]) /* eslint-disable-line react-hooks/exhaustive-deps */
 
-    return [selectedState, { dispatch: context.dispatch }]
+    return [selectedState, { dispatch: store.dispatch }]
 }
 
 export const useGlobalDispatch = () => {
-    return useContext(GlobalStateContext).dispatch
+    return useGlobalStateStore().dispatch
 }
 
-export const useGlobalAction = (actionCreator) => {
+export const useGlobalAction = actionCreator => {
     const dispatch = useGlobalDispatch()
     return useCallback((...args) => {
         dispatch(actionCreator(...args))

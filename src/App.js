@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { GlobalStateProvider, useGlobalAction, useGlobalState } from './globalStateService';
+import { GlobalStateProvider, useGlobalAction, useGlobalState, createStore } from './globalStateService';
 
 // Action creators
 const acDefineQuestion = question => ({
@@ -33,6 +33,9 @@ const sampleReducer = (state = defaultState, action) => {
       return state
   }
 }
+
+// Store
+const store = createStore(sampleReducer)
 
 // Consumer Components
 let questionRenderCount = 0
@@ -67,7 +70,7 @@ const RandomizeButton = () => {
 
 // Top-level application
 const App = () => (
-  <GlobalStateProvider reducer={sampleReducer}>
+  <GlobalStateProvider store={store}>
     <div className="outer">
       <div className="container">
         Question: <Question />

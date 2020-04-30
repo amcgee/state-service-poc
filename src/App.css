@@ -18,6 +18,10 @@
   margin: auto;
 }
 
+small {
+  float: right;
+}
+
 p {
   text-align: center;
   font-size: 0.8rem;

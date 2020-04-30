@@ -55,7 +55,7 @@ export const useGlobalDispatch = () => {
     return useContext(GlobalStateContext).dispatch
 }
 
-export const useGlobalDispatcher = (actionCreator) => {
+export const useGlobalAction = (actionCreator) => {
     const dispatch = useGlobalDispatch()
     return useCallback((...args) => {
         dispatch(actionCreator(...args))

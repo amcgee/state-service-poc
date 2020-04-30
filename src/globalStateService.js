@@ -40,7 +40,7 @@ export const useGlobalState = (selector = identity) => {
         const callback = state => setSelectedState(selector(state)) 
         store.subscribe(callback)
         return () => store.unsubscribe(callback)
-    }, [store, selectedState, /* ignore selector */]) /* eslint-disable-line react-hooks/exhaustive-deps */
+    }, [store, /* ignore selector */]) /* eslint-disable-line react-hooks/exhaustive-deps */
 
     return [selectedState, { dispatch: store.dispatch }]
 }

@@ -1,53 +1,51 @@
 import React, { useMemo, useEffect, useCallback, useContext, useState } from 'react'
 
-const GlobalStateContext = React.createContext({
-    state: undefined,
-    dispatch: () => undefined
-})
+const identity = state => state
+
+class StateStore {
+    state = undefined
+    subscriptions = new Set()
+    reducer
+
+    constructor(reducer = identity) {
+        this.reducer = reducer
+        this.state = reducer(undefined, undefined)
+    }
+
+    subscribe = (callback) => {
+        this.subscriptions.add(callback)
+    }
+    unsubscribe = (callback) => {
+        this.subscriptions.delete(callback)
+    }
+    dispatch = (action) => {
+        this.state = this.reducer(this.state, action)
+        for (let callback of this.subscriptions) {
+            callback(this.state)
+        }
+    }
+}
+
+const GlobalStateContext = React.createContext(new StateStore())
 
 export const GlobalStateProvider = ({ rootReducer, children }) => {
-    const subscriptions = useMemo(() => new Set(), [])
+    const stateStore = useMemo(() => new StateStore(rootReducer), [rootReducer])
 
-    const subscribe = useCallback(callback => {
-        subscriptions.add(callback)
-    }, [subscriptions])
-    const unsubscribe = useCallback(callback => {
-        subscriptions.delete(callback)
-    }, [subscriptions])
-    
-    const dispatch = useCallback(action => {
-        stateContext.state = rootReducer(stateContext.state, action)
-        for (let callback of subscriptions) {
-            callback(stateContext.state)
-        }
-    }, [rootReducer, subscriptions, /* ignore stateContext.state updates */]) /* eslint-disable-line react-hooks/exhaustive-deps */
-    
-    const stateContext = useMemo(() => ({
-        state: rootReducer(undefined, undefined),
-        dispatch,
-        subscribe,
-        unsubscribe
-    }), [rootReducer, dispatch, subscribe, unsubscribe])
-
-    return <GlobalStateContext.Provider value={stateContext}>
+    return <GlobalStateContext.Provider value={stateStore}>
         {children}
     </GlobalStateContext.Provider>
 }
 
-const identitySelector = state => state // By default, respond to ANY state change
-export const useGlobalState = (selector = identitySelector) => {
+export const useGlobalState = (selector = identity) => {
     const context = useContext(GlobalStateContext)
     const [selectedState, setSelectedState] = useState(selector(context.state))
 
     const stableSelector = useCallback(selector, [ /* ignore selector updates */ ]) /* eslint-disable-line react-hooks/exhaustive-deps */
 
     useEffect(() => {
-        const callback = state => {
-            // TODO: deep equality check, this only triggers an update on referential inequality
-            setSelectedState(
-                stableSelector(state)
-            )
-        }
+        // TODO: deep equality check, this only triggers an update on referential inequality
+        const callback = state => setSelectedState(stableSelector(state))
+        
         context.subscribe(callback)
         return () => context.unsubscribe(callback)
     }, [context, stableSelector, selectedState])
@@ -58,6 +56,7 @@ export const useGlobalState = (selector = identitySelector) => {
 export const useGlobalDispatch = () => {
     return useContext(GlobalStateContext).dispatch
 }
+
 export const useGlobalDispatcher = (actionCreator) => {
     const dispatch = useGlobalDispatch()
     return useCallback((...args) => {

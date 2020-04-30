@@ -43,6 +43,7 @@ export const useGlobalState = (selector = identitySelector) => {
 
     useEffect(() => {
         const callback = state => {
+            // TODO: deep equality check, this only triggers an update on referential inequality
             setSelectedState(
                 stableSelector(state)
             )

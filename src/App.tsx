@@ -61,11 +61,6 @@ const Question = () => {
   </span>
 }
 
-const Loader = () => {
-  const loading = useGlobalState((state: AppState) => state.loading)
-  return <>{loading && '...'}</>
-}
-
 let answerRenderCount = 0
 const Answer = () => {
   const answer = useGlobalState((state: AppState) => state.answer) // inline selectors work too
@@ -77,8 +72,14 @@ const Answer = () => {
 
 const SolveButton = () => {
   const defineQuestion = useGlobalStateMutation(setQuestionMutation)
+  const loading = useGlobalState((state: AppState) => state.loading)
 
-  return <button onClick={() => defineQuestion('What is the meaning of life, the universe, and everything?')}>What is the question?</button>
+  return <button 
+    disabled={loading}
+    onClick={() => defineQuestion('What is the meaning of life, the universe, and everything?')}
+  >
+    What is the question?
+  </button>
 }
 const RandomizeButton = () => {
   const setAnswer = useGlobalStateMutation(setAnswerMutation)
@@ -95,7 +96,6 @@ const App = () => (
           Answer: <Answer />
         <SolveButton />
         <RandomizeButton />
-        <Loader />
       </div>
       <p>
         <strong>Notes</strong><br/>

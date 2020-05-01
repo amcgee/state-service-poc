@@ -45,10 +45,6 @@ export const useGlobalState = (selector = identity) => {
     return [selectedState, { dispatch: store.dispatch }]
 }
 
-export const useGlobalDispatch = () => {
-    return useGlobalStateStore().dispatch
-}
-
 export const useGlobalStateMutation = mutationCreator => {
     const store = useGlobalStateStore()
     return useCallback((...args) => {

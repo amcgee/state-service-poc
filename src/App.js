@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import { GlobalStateProvider, createStore, useGlobalState, useGlobalStateMutation } from './globalStateService';
 
-// Action-reducers (mutations?)
+// Mutations (basically combined action-creator and reducer)
 const setAnswerMutation = answer => state => ({ ...state, answer })
 const setQuestionMutation = question => state => ({ ...state, question })
 

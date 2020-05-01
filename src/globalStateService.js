@@ -2,9 +2,9 @@ import React, { useEffect, useCallback, useContext, useState } from 'react'
 
 const identity = state => state
 
-export const createStore = (reducer = identity) => {
+export const createStore = (initialState = {}) => {
     const subscriptions = new Set()
-    let state = reducer(undefined, undefined)
+    let state = initialState
 
     return {
         getState: () => state,
@@ -14,8 +14,8 @@ export const createStore = (reducer = identity) => {
         unsubscribe: callback => {
             subscriptions.delete(callback)
         },
-        dispatch: action => {
-            state = reducer(state, action)
+        mutate: mutation => {
+            state = mutation(state)
             for (let callback of subscriptions) {
                 callback(state)
             }
@@ -49,9 +49,9 @@ export const useGlobalDispatch = () => {
     return useGlobalStateStore().dispatch
 }
 
-export const useGlobalAction = actionCreator => {
-    const dispatch = useGlobalDispatch()
+export const useGlobalStateMutation = mutationCreator => {
+    const store = useGlobalStateStore()
     return useCallback((...args) => {
-        dispatch(actionCreator(...args))
-    }, [actionCreator, dispatch])
+        store.mutate(mutationCreator(...args))
+    }, [mutationCreator, store])
 }

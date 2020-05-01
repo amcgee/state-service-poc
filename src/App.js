@@ -1,41 +1,15 @@
 import React from 'react';
 import './App.css';
-import { GlobalStateProvider, useGlobalAction, useGlobalState, createStore } from './globalStateService';
+import { GlobalStateProvider, createStore, useGlobalState, useGlobalStateMutation } from './globalStateService';
 
-// Action creators
-const acDefineQuestion = question => ({
-  type: 'DEFINE_QUESTION',
-  question
-})
-const acSetAnswer = answer => ({
-  type: 'SET_ANSWER',
-  answer
-})
-
-// Reducer
-const defaultState = {
-  answer: 42,
-  question: undefined
-}
-const sampleReducer = (state = defaultState, action) => {
-  switch (action?.type) {
-    case 'DEFINE_QUESTION':
-      return {
-        ...state,
-        question: action.question
-      }
-    case 'SET_ANSWER':
-      return {
-        ...state,
-        answer: action.answer
-      }
-    default:
-      return state
-  }
-}
+// Mutations (basically combined action-creator and reducer)
+const setAnswerMutation = answer => state => ({ ...state, answer })
+const setQuestionMutation = question => state => ({ ...state, question })
 
 // Store
-const store = createStore(sampleReducer)
+const store = createStore({
+  answer: 42
+})
 
 // Consumer Components
 let questionRenderCount = 0
@@ -58,12 +32,12 @@ const Answer = () => {
 }
 
 const SolveButton = () => {
-  const defineQuestion = useGlobalAction(acDefineQuestion)
+  const defineQuestion = useGlobalStateMutation(setQuestionMutation)
 
   return <button onClick={() => defineQuestion('What is the meaning of life, the universe, and everything?')}>What is the question?</button>
 }
 const RandomizeButton = () => {
-  const setAnswer = useGlobalAction(acSetAnswer)
+  const setAnswer = useGlobalStateMutation(setAnswerMutation)
 
   return <button onClick={() => setAnswer(Math.floor(Math.random() * 10000))}>Randomize answer</button>
 }

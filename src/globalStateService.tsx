@@ -12,7 +12,7 @@ export const createStore = <StateType extends {}>(initialState: StateType): Glob
         for (let callback of subscriptions) {
             callback(state)
         }
-    }, 10)
+    }, 1)
 
     const applyMutation = async (mutation: Mutation<StateType>) => {
         if (Array.isArray(mutation)) {

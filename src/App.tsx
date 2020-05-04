@@ -3,19 +3,58 @@ import './App.css';
 import { GlobalStateProvider, createStore, useGlobalState, useGlobalStateMutation } from './globalStateService';
 
 // Mutations (basically combined action-creator and reducer)
-const setAnswerMutation = answer => state => ({ ...state, answer })
-const setQuestionMutation = question => state => ({ ...state, question })
+const setAnswerMutation = 
+  (answer: number) => 
+  (state: AppState): AppState => ({
+    ...state,
+    answer
+  })
+
+const setRealQuestionMutation = 
+  async (question: string) => {
+    try {
+      await new Promise(r => setTimeout(r, 3000))
+      // throw new Error()
+      return (state: AppState): AppState => ({
+        ...state,
+        question
+      })
+    } catch (e) {
+      return (state: AppState): AppState => ({
+        ...state,
+        question: 'What went wrong?'
+      })
+    }
+  }
+
+  const setLoadingMutation = (loading: boolean) => (state: AppState): AppState => ({ ...state, loading })
+  const setQuestionMutation = 
+    (question: string) => [
+      setLoadingMutation(true),
+      setRealQuestionMutation(question),
+      setLoadingMutation(false)
+    ]
+
+// Selectors
+const questionSelector = (state: AppState) => state.question
 
 // Store
-const store = createStore({
-  answer: 42
-})
+type AppState = {
+  answer: number,
+  question?: string,
+  loading: boolean
+}
+const initialState: AppState = {
+  answer: 42,
+  loading: false
+}
+const store = createStore(initialState)
 
 // Consumer Components
 let questionRenderCount = 0
-const questionSelector = state => state.question
 const Question = () => {
-  const [question] = useGlobalState(questionSelector)
+  const question = useGlobalState(questionSelector)
+
   return <span>
     <strong>{question}</strong>
     <small>({++questionRenderCount})</small>
@@ -24,7 +63,7 @@ const Question = () => {
 
 let answerRenderCount = 0
 const Answer = () => {
-  const [answer] = useGlobalState(state => state.answer) // inline selectors work too
+  const answer = useGlobalState((state: AppState) => state.answer) // inline selectors work too
   return <span>
     <strong>{answer}</strong>
     <small>({++answerRenderCount})</small>
@@ -33,8 +72,14 @@ const Answer = () => {
 
 const SolveButton = () => {
   const defineQuestion = useGlobalStateMutation(setQuestionMutation)
+  const loading = useGlobalState((state: AppState) => state.loading)
 
-  return <button onClick={() => defineQuestion('What is the meaning of life, the universe, and everything?')}>What is the question?</button>
+  return <button 
+    disabled={loading}
+    onClick={() => defineQuestion('What is the meaning of life, the universe, and everything?')}
+  >
+    What is the question?
+  </button>
 }
 const RandomizeButton = () => {
   const setAnswer = useGlobalStateMutation(setAnswerMutation)

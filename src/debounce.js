@@ -1,11 +1,11 @@
 export const debounce = (f, ms) => {
     let timeout
-    return (...args) => {
+    return () => {
         if (timeout) {
             return;
         }
         timeout = setTimeout(() => {
-            f(...args)
+            f()
             timeout = undefined
         }, ms)
     }
